@@ -1,0 +1,18 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench>
+    <Files>
+      <File FileName="ConsoleApplication1/Properties/AssemblyInfo.cs" Line="1" Column="1" />
+      <File FileName="ConsoleApplication1/Properties/Resources.Designer.cs" Line="1" Column="1" />
+      <File FileName="ConsoleApplication1/array2image.cs" Line="1" Column="1" />
+      <File FileName="ConsoleApplication1/PGCamWrapper.cs" Line="1" Column="1" />
+      <File FileName="ConsoleApplication1/Program.cs" Line="1" Column="1" />
+      <File FileName="ConsoleApplication1/ServerAgent.cs" Line="1" Column="1" />
+      <File FileName="../../../../../Library/Frameworks/Mono.framework/Versions/3.4.0/lib/mono/4.5/Microsoft.Common.targets" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
