@@ -38,6 +38,7 @@ namespace AnySurfaceWebServer
         private int MAX_TRIGGER_FAILS = 1;
         private int PHOTO_TIMEOUT = 1000;
         private bool paramChanged = false;
+        private ManagedPGRGuid guid;
 
         public PGCamWrapper()
         {
@@ -50,7 +51,7 @@ namespace AnySurfaceWebServer
                 throw new Exception("No Camera Found");
             }
             cam = new ManagedCamera();
-            ManagedPGRGuid guid = busMgr.GetCameraFromIndex(0);
+            guid = busMgr.GetCameraFromIndex(0);
             cam.Connect(guid);
             waitForWake();
             setDefaults();
@@ -89,9 +90,22 @@ namespace AnySurfaceWebServer
                     triggerFails++;
                     //throw new Exception("Trigger failed. Make sure GPOI pin is connected and working. Then restart server. Until then No trigger will be used");
                 }
+                else
+                {
+                    restartCamera();
+                }
             }
 
             return convertedImage;
+        }
+
+        public void restartCamera(){
+            Console.WriteLine("Restarting camera");
+            cam.Disconnect();
+            cam.Connect(guid);
+            //cam.StopCapture();
+            cam.StartCapture();
+            waitForWake();
         }
 
         public Image getPictureBMP()
@@ -100,9 +114,9 @@ namespace AnySurfaceWebServer
             {
                 Console.WriteLine("parameter changed, pause for a few pictures");
                 getPicture();
-                Thread.Sleep(80);
+                Thread.Sleep(70);
                 getPicture();
-                Thread.Sleep(80);
+                Thread.Sleep(70);
                 paramChanged = false;
             }
             ManagedImage convertedImage = getPicture();
@@ -195,6 +209,7 @@ namespace AnySurfaceWebServer
                     CameraProperty gn = cam.GetProperty(PropertyType.Gain);
                     gn.autoManualMode = true;
                     cam.SetProperty(gn);
+                    gain = -1;
                     paramChanged = true;
                 }
                 else if (value != gain)

@@ -1,0 +1,162 @@
+<html>
+<head>
+<script type="text/javascript">
+	url = 'http://127.0.0.1:8080/'
+	var rapidCount = 0
+	var rapidId
+
+	function rapidFireImages( interval ){
+		rapidCount = 0
+		if( ! interval ){
+			interval = 80
+		}
+		rapidId = setInterval(function(){
+			if( rapidCount < 60){
+				takePicture()
+			}
+			else{
+				clearInterval(rapidId)
+			}
+			rapidCount ++ 
+		}, interval)	
+	}
+
+	var pauseTime = 0
+
+	function gonuts(){
+		setInterval(function(){
+			var now = new Date().getTime()
+			if( now < pauseTime){
+				return
+			}
+			if( Math.random() > 0.8){
+				takePicture()
+			}
+			if( Math.random() > 0.99){
+				findMinMax()
+			}
+			if( Math.random() > 0.98){
+				pauseTime = now + Math.random()*10000 
+				console.log('pausing')
+			}
+
+		},10)
+	}
+
+	function takePicture(){
+		var dv = document.getElementById('imgs')
+		var dv2 = document.createElement('div')
+		var im = new Image()
+		var start = new Date().getTime()
+		im.onload=function(){
+			var end = new Date().getTime()
+			console.log('image loaded',end-start,'ms')
+			var dv3 = document.createElement('div')
+			dv3.innerHTML = ""+end-start+" ms"
+			dv2.appendChild(dv3)
+		}
+		im.onerror = function(){
+			console.warn((new Date())+'error loading image.png')
+			var dve = document.getElementById('errors')
+			dve.innerHTML = (new Date())+" Image load error <hr>" + dve.innerHTML
+		}
+		var rand = Math.random;
+		var floor = Math.floor;
+		var params = "?shutter=" + floor( rand() * 100 -20) + "&gain=" + floor( rand() * 50 - 10 ); 
+		if( rand() > 0.9){
+				im.src=url + 'image.png' + params;
+		}
+		else{
+				im.src=url + 'image.png';
+		}
+		dv2.appendChild(im)
+		dv.appendChild(dv2)
+	}
+
+	function findMinMax(){
+		var dv = document.getElementById('texts')
+		
+		var start = new Date().getTime()
+		function reqListener () {
+			var end = new Date().getTime()
+  			console.log(this.responseText);
+  			dv.innerHTML = String(end - start) + " ms . Response :" + this.responseText + "<hr>" + dv.innerHTML
+		}
+
+		var oReq = new XMLHttpRequest();
+		oReq.addEventListener("error", function(){ 
+			console.warn('error loading shutter')
+			var dve = document.getElementById('errors')
+  			dve.innerHTML = (new Date())+" find min max shutter error<hr>" + dve.innerHTML
+		}, false);
+		oReq.onload = reqListener;
+		oReq.open("get", url + 'findMinMax', true);
+		oReq.send();
+		
+	
+	}
+</script>
+<style>
+#imgs {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    //-webkit-box-direction: reverse;
+    -moz-box-direction: reverse;
+    -webkit-box-orient: horizontal;
+    -moz-box-orient: horizontal;
+    -webkit-flex-direction: row-reverse;
+    -ms-flex-direction: row-reverse;
+    flex-direction: row-reverse;
+    -webkit-flex-wrap: wrap-reverse;
+    -ms-flex-wrap: wrap-reverse;
+    flex-wrap: wrap-reverse;
+    -webkit-box-pack: start;
+    -moz-box-pack: start;
+    -webkit-justify-content: flex-start;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+    -webkit-align-content: stretch;
+    -ms-flex-line-pack: stretch;
+    align-content: stretch;
+    -webkit-box-align: start;
+    -moz-box-align: start;
+    -webkit-align-items: flex-start;
+    -ms-flex-align: start;
+    align-items: flex-start;
+
+    }
+ #errors{
+ 	color:red;
+ 	overflow: scroll;
+	height: 140;
+ }
+
+ #texts{
+ 	overflow: scroll;
+	height: 140;
+ }
+</style>
+</head>
+<body>
+Testing camera at 127.0.0.1:3000. warning no attempts to limit memory consumption are made. 
+<br>
+<button onclick="takePicture()">take picture</button>
+<button onclick="rapidFireImages(20)">take 60 pictures fast</button>
+<button onclick="rapidFireImages(90)">take 60 pictures medium</button>
+<button onclick="rapidFireImages(180)">take 60 pictures slow</button>
+<br>
+<button onclick="findMinMax()">findMinMax</button>
+<br>
+<button onclick="gonuts()">go nuts</button>
+
+
+<div id='errors'></div>
+<div id='texts'></div>
+<div id="imgs"></div>
+
+</body>
+
+</html>
