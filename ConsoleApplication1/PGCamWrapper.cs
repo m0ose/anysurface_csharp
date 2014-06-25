@@ -99,8 +99,8 @@ namespace AnySurfaceWebServer
             uint datalength = convertedImage.cols * convertedImage.rows;
             int cols = (int)convertedImage.cols;
             int rows = (int)convertedImage.rows;
-            Bitmap fart = new Bitmap(cols, rows);
-            byte[] wart = new byte[datalength];
+            //Bitmap fart = new Bitmap(cols, rows);
+            //byte[] wart = new byte[datalength];
             Image fu = null;
             unsafe
             {

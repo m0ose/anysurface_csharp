@@ -33,18 +33,21 @@ namespace AnySurfaceWebServer
         static void Main(string[] args)
         {
             Server serv = null;
+            var ck = new ConsoleKeyInfo();
             try
             {
-                serv = new Server(8080, "fart");
+                serv = new Server(8080, "Camera Server");
                 serv.startServer();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
+                Console.WriteLine(" Press any key to exit");
+
+                ck = Console.ReadKey();
                 return;
             }
 
-            var ck = new ConsoleKeyInfo();
 
             do//main loop
             {

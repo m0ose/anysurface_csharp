@@ -131,7 +131,13 @@ namespace serverAgent
                 }
                 else { 
                 //send response 
-                    string responseString = "<HTML><BODY><h3> Your connected to<h1> " + name + "</h1></h3>" + request.RawUrl + "</BODY></HTML>";
+                    string responseString = "<HTML><BODY><h3> Your connected to<h1> " + name + "</h1></h3>" + request.RawUrl
+                        + "<hr>Usage:<li>  http://127.0.0.1:8080/shot.png "
+                        +" <li>http://127.0.0.1:8080/shot.png?shutter=4&gain=0. Shutter and Gain can be set absolutely"
+                        + "<li>  http://127.0.0.1:8080/shot.png?delay=0.002. The delay is used for with GPIO sync cable"
+                        + " <li>http://127.0.0.1:8080/shot.png?shutter=-1&gain=-1&delay=-1. Negative numbers turn on auto mode"
+                        + " <li>  http://127.0.0.1:8080/?shutter=4&gain=0&delay=0.002. You don't need to take a picture to set the parameters "
+                        + "</BODY></HTML>";
                     writeTextResponse(response, responseString);
                 }
             }
