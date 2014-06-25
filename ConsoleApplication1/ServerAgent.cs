@@ -134,11 +134,12 @@ namespace serverAgent
                 else { 
                 //send response 
                     string responseString = "<HTML><BODY><h3> Your connected to<h1> " + name + "</h1></h3>" + request.RawUrl
-                        + "<hr>Usage:<li>  http://127.0.0.1:8080/shot.png "
-                        +" <li>http://127.0.0.1:8080/shot.png?shutter=4&gain=0. Shutter and Gain can be set absolutely"
-                        + "<li>  http://127.0.0.1:8080/shot.png?delay=0.002. The delay is used for with GPIO sync cable"
-                        + " <li>http://127.0.0.1:8080/shot.png?shutter=-1&gain=-1&delay=-1. Negative numbers turn on auto mode"
-                        + " <li>  http://127.0.0.1:8080/?shutter=4&gain=0&delay=0.002. You don't need to take a picture to set the parameters "
+                        + "<hr>Usage:<li><b><a href='http://127.0.0.1:" + port + "/shot.jpg'>http://127.0.0.1:" + port + "/shot.jpg</a> </b>"
+                        + " <li><b><a href='http://127.0.0.1:" + port + "/shot.jpg?shutter=4&gain=0'>http://127.0.0.1:" + port + "/shot.jpg?shutter=4&gain=0</a></b>. Shutter and Gain can be set absolutely"
+                        + " <li><b><a href='http://127.0.0.1:" + port + "/shot.jpg?delay=0.002'>http://127.0.0.1:" + port + "/shot.jpg?delay=0.002</a></b>. The delay in seconds afer GPIO trigger signal"
+                        + " <li><b><a href='http://127.0.0.1:" + port + "/shot.jpg?shutter=-1&gain=-1&delay=-1'>http://127.0.0.1:" + port + "/shot.jpg?shutter=-1&gain=-1&delay=-1</a></b>. Negative numbers turn on automatic mode"
+                        + " <li><b><a href='http://127.0.0.1:" + port + "/?shutter=4&gain=0&delay=0.002'>http://127.0.0.1:" + port + "/?shutter=4&gain=0&delay=0.002</a></b>. You don't need to take a picture to set the parameters "
+                        + " <li><b><a href='http://127.0.0.1:" + port + "/shot.png'>http://127.0.0.1:" + port + "/shot.png</a></b>. Different formats based on extension. Supported extensions are jpg, png, and bmp."
                         + "</BODY></HTML>";
                     writeTextResponse(response, responseString);
                 }

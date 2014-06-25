@@ -24,23 +24,23 @@ using System.IO;
 using System.Drawing;
 using FlyCapture2Managed;
 using System.Diagnostics;
+using System.Threading;
 
 namespace AnySurfaceWebServer
 {
     class PGCamWrapper
     {
         public ManagedCamera cam;
-        private int shutter;
-        private int gain;
-        private double delay;
+        private int shutter=-990;
+        private int gain = -990;
+        private double delay= -990;
         private int triggerFails = 0;
         private int MAX_TRIGGER_FAILS = 1;
         private int PHOTO_TIMEOUT = 1000;
+        private bool paramChanged = false;
 
         public PGCamWrapper()
         {
-            shutter = gain = -1;
-            delay = -1;
             // initialize the camera
             ManagedBusManager busMgr = new ManagedBusManager();
             uint numCameras = busMgr.GetNumOfCameras();
@@ -87,7 +87,7 @@ namespace AnySurfaceWebServer
                 {
                     Console.WriteLine("Turning off trigger beacuse of error {0}", e.ToString());
                     triggerFails++;
-                    throw new Exception("Trigger failed. Make sure GPOI pin is connected and working. Then restart server. Until then No trigger will be used");
+                    //throw new Exception("Trigger failed. Make sure GPOI pin is connected and working. Then restart server. Until then No trigger will be used");
                 }
             }
 
@@ -96,6 +96,15 @@ namespace AnySurfaceWebServer
 
         public Image getPictureBMP()
         {
+            if (paramChanged == true)
+            {
+                Console.WriteLine("parameter changed, pause for a few pictures");
+                getPicture();
+                Thread.Sleep(80);
+                getPicture();
+                Thread.Sleep(80);
+                paramChanged = false;
+            }
             ManagedImage convertedImage = getPicture();
             uint datalength = convertedImage.cols * convertedImage.rows;
             int cols = (int)convertedImage.cols;
@@ -126,7 +135,7 @@ namespace AnySurfaceWebServer
             Shutter = -1;
             Gain = -1;
             FC2Config config = cam.GetConfiguration();
-            config.grabTimeout = PHOTO_TIMEOUT;//5 seconds before image recive fails
+            config.grabTimeout = PHOTO_TIMEOUT;// seconds before image reception fails
             cam.SetConfiguration(config);
         }
 
@@ -153,12 +162,13 @@ namespace AnySurfaceWebServer
         {
             set
             {
-                if (value < 0)
+                if (value < 0 && shutter != -1)
                 {
                     CameraProperty shut = cam.GetProperty(PropertyType.Shutter);
                     shut.autoManualMode = true;
                     cam.SetProperty(shut);
                     shutter = -1;
+                    paramChanged = true;
                 }
                 else if (value != shutter)
                 {
@@ -167,6 +177,7 @@ namespace AnySurfaceWebServer
                     shut.valueA = (uint)value;
                     cam.SetProperty(shut);
                     shutter = value;
+                    paramChanged = true;
                 }
             }
             get
@@ -179,11 +190,12 @@ namespace AnySurfaceWebServer
         {
             set
             {
-                if (value < 0)
+                if (value < 0 && gain != -1)
                 {
                     CameraProperty gn = cam.GetProperty(PropertyType.Gain);
                     gn.autoManualMode = true;
                     cam.SetProperty(gn);
+                    paramChanged = true;
                 }
                 else if (value != gain)
                 {
@@ -193,6 +205,7 @@ namespace AnySurfaceWebServer
                     cam.SetProperty(gn);
                     gain = value;
                     Console.WriteLine("gain set to {0}", gain);
+                    paramChanged = true;
                 }
             }
             get
@@ -205,9 +218,11 @@ namespace AnySurfaceWebServer
         {
             set
             {
-                if (value < 0 || triggerFails >= MAX_TRIGGER_FAILS)
+                if ((value < 0  && delay != -1.0 )|| triggerFails >= MAX_TRIGGER_FAILS)
                 {
-                    CameraProperty gn1 = cam.GetProperty(PropertyType.TriggerMode);
+                    if( delay != -1.0)
+                    {
+   CameraProperty gn1 = cam.GetProperty(PropertyType.TriggerMode);
                     gn1.onOff = false;//I think this is OFF
                     cam.SetProperty(gn1);
 
@@ -216,7 +231,10 @@ namespace AnySurfaceWebServer
                     prop.autoManualMode = true;
                     prop.onOff = false;
                     cam.SetProperty(prop);
-                    delay = -1;
+                    delay = -1.0;
+                    paramChanged = true;
+                    }
+                 
                 }
                 else if (delay != value)
                 {
@@ -232,6 +250,7 @@ namespace AnySurfaceWebServer
                     prop.absValue = (float)value;
                     cam.SetProperty(prop);
                     delay = value;
+                    paramChanged = true;
                 }
             }
             get
