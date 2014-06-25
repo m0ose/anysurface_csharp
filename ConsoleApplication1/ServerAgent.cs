@@ -94,7 +94,7 @@ namespace serverAgent
                         case "gain":
                             int val2 = Convert.ToInt32(qs2);
                             camw.Gain = val2;
-                            Console.WriteLine("set gain:" + val2);
+                            Console.WriteLine("gain set to {0}", val2);
                             break;
                         case "shutter":
                             int val3 = Convert.ToInt32( qs2);
@@ -115,6 +115,8 @@ namespace serverAgent
                 String stlow = request.RawUrl.ToLower();
                 if (stlow.IndexOf("shot.") > 0 || stlow.IndexOf("image.") > 0)
                 {
+                    // Image Requested
+                    //
                     Stopwatch stopwatch = new Stopwatch();
                     stopwatch.Start();
                     ImageFormat firmat = imgformat4url(stlow);

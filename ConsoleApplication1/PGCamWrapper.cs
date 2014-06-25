@@ -87,6 +87,7 @@ namespace AnySurfaceWebServer
                 {
                     Console.WriteLine("Turning off trigger beacuse of error {0}", e.ToString());
                     triggerFails++;
+                    throw new Exception("Trigger failed. Make sure GPOI pin is connected and working. Then restart server. Until then No trigger will be used");
                 }
             }
 
