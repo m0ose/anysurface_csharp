@@ -48,7 +48,6 @@ namespace AnySurfaceWebServer
                 return;
             }
 
-
             do//main loop
             {
                 Console.WriteLine(" Press escape (esc) to exit");
