@@ -37,7 +37,7 @@ namespace serverAgent
         private HttpListener listener;
         private HttpListenerContext context;
         private PGCamWrapper camw;
-        private bool EXIT_ON_ERROR = true;
+        private bool EXIT_ON_ERROR = false;
 
         public Server(int _port, string _name)
         {
@@ -135,7 +135,7 @@ namespace serverAgent
                     Console.WriteLine("picture taking took" +stopwatch.ElapsedMilliseconds + "ms" );
                     img.Dispose();
                 }
-                else if (stlow.IndexOf("brightestpoint.json") > 0)
+                else if (stlow.IndexOf("brightestpoint") > 0)
                 {
                     string bp = camw.brightestPoint();
                     writeTextResponse(response, bp);
@@ -149,6 +149,10 @@ namespace serverAgent
                         + " <li><b><a href='http://127.0.0.1:" + port + "/shot.jpg?shutter=-1&gain=-1&delay=-1'>http://127.0.0.1:" + port + "/shot.jpg?shutter=-1&gain=-1&delay=-1</a></b>. Negative numbers turn on automatic mode"
                         + " <li><b><a href='http://127.0.0.1:" + port + "/?shutter=4&gain=0&delay=0.002'>http://127.0.0.1:" + port + "/?shutter=4&gain=0&delay=0.002</a></b>. You don't need to take a picture to set the parameters "
                         + " <li><b><a href='http://127.0.0.1:" + port + "/shot.png'>http://127.0.0.1:" + port + "/shot.png</a></b>. Different formats based on extension. Supported extensions are jpg, png, and bmp."
+                        + " <li><b><a href='http://127.0.0.1:" + port + "/brightestpoint.json'>http://127.0.0.1:" + port + "/brightestpoint.json</a></b>. Find the brightest Point"
+                        + " <li><b><a href='http://127.0.0.1:" + port + "/brightestpoint.json?shutter=40&gain=0'>http://127.0.0.1:" + port + "/brightestpoint.json?shutter=40&gain=0</a></b>. Find the brightest Point"
+
+
                         + "</BODY></HTML>";
                     writeTextResponse(response, responseString);
                 }

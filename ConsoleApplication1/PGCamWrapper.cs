@@ -39,6 +39,7 @@ namespace AnySurfaceWebServer
         private int PHOTO_TIMEOUT = 2000;
         private bool paramChanged = false;
         private ManagedPGRGuid guid;
+        private DateTime lastPic = DateTime.UtcNow;
 
         public PGCamWrapper()
         {
@@ -73,24 +74,37 @@ namespace AnySurfaceWebServer
 
         public ManagedImage getPicture()
         {
+            //pull one image off of the buffer
             if (paramChanged == true)
             {
                 Console.WriteLine("parameter changed, pause for a few pictures");
                 _getPicture();
-                Thread.Sleep(70);
-                _getPicture();
-                Thread.Sleep(70);
                 paramChanged = false;
             }
             ManagedImage res = _getPicture();
             return res;
         }
 
+        private void pauseForShutter(){
+            DateTime now = DateTime.UtcNow;
+            TimeSpan diff = now - lastPic;
+            double diff2 = diff.TotalMilliseconds;
+            Console.WriteLine("milliseconds since last pic {0}", diff.TotalMilliseconds);
+            if (diff2 < Math.Min(30, Shutter+10))
+            {
+                Console.WriteLine("sleeping for {0}", 35 - diff2 );
+                Thread.Sleep((int)(35 - diff2));
+            }
+            lastPic = now;
+        }
+
         private ManagedImage _getPicture()
         {
+            pauseForShutter();
 
             ManagedImage rawImage = new ManagedImage();
             ManagedImage convertedImage = new ManagedImage();
+
             try
             {
                 cam.RetrieveBuffer(rawImage);//get the actual image
@@ -99,15 +113,17 @@ namespace AnySurfaceWebServer
             catch (FC2Exception e)
             {
                 String et = e.Type.ToString();
+                Console.WriteLine(et);
                 Debug.WriteLine(cam);
                 if (et == "Timeout" || et == "TriggerFailed")
                 {
                     Console.WriteLine("Turning off trigger beacuse of error {0}", e.ToString());
                     triggerFails++;
-
-                    restartCamera();
-                    triggerFails = 0;
-
+                    if (triggerFails >= 1)
+                    {
+                        restartCamera();
+                    //    triggerFails = 0;
+                    }
                     //throw new Exception("Trigger failed. Make sure GPOI pin is connected and working. Then restart server. Until then No trigger will be used");
                 }
                 else
@@ -122,12 +138,22 @@ namespace AnySurfaceWebServer
         public void restartCamera()
         {
             Console.WriteLine("Restarting camera");
-            cam.StopCapture();
+            try
+            {
+                cam.StopCapture();
+            }
+            catch (Exception e)
+            {}
             cam.Disconnect();
+            Thread.Sleep(200);
+            cam = new ManagedCamera();
+            ManagedBusManager busMgr = new ManagedBusManager();
+            guid = busMgr.GetCameraFromIndex(0);
             cam.Connect(guid);
-            //cam.StopCapture();
-            cam.StartCapture();
             waitForWake();
+            cam.StartCapture();
+            setDefaults();
+            Thread.Sleep(200);
         }
 
         public Image getPictureBMP()
@@ -139,6 +165,10 @@ namespace AnySurfaceWebServer
             int rows = (int)convertedImage.rows;
             //Bitmap fart = new Bitmap(cols, rows);
             //byte[] wart = new byte[datalength];
+            if (cols <= 0 || rows <= 0)
+            {
+                return new Bitmap(1, 1);
+            }
             Image fu = null;
             unsafe
             {

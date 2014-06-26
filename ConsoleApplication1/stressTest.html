@@ -119,9 +119,125 @@
 		oReq.onload = reqListener;
 		oReq.open("get", url + 'brightestPoint.json?shutter=10&gain=0', true);
 		oReq.send();
-
-
 	}
+
+	function HDR(){
+		var bunk = new Image() 
+		var imL = new Image()
+		imL.crossOrigin="anonymous";
+		var imM = new Image()
+		imM.crossOrigin="anonymous";
+
+		var imH = new Image()
+		imH.crossOrigin="anonymous";
+
+
+		bunk.src = "http://127.0.0.1:8080/shot.jpg?shutter=10&gain=0"
+		imL.src = "http://127.0.0.1:8080/shot.jpg?shutter=10&gain=0"
+		imM.src = "http://127.0.0.1:8080/shot.jpg?shutter=30&gain=0"
+		imH.src = "http://127.0.0.1:8080/shot.jpg?shutter=90&gain=0"
+		var dv = document.getElementById('imgs')
+			var dv2 = document.createElement('div')
+
+			dv2.appendChild(imL)
+			dv2.appendChild(imM)
+			dv2.appendChild(imH)
+
+			dv.appendChild(dv2)
+		setTimeout( function(){
+			var L = getimgdata( imL)
+			var M = getimgdata( imM)
+			var H = getimgdata( imH)
+			var res = getimgdata( imL)
+			console.log("intensity calc")
+			var max = Math.max
+			for( var i=0; i < res.data.length; i+=4){
+
+				var inL = intensity( L.data, i )
+				var inM = intensity( M.data, i )
+				var inH = intensity( H.data, i )
+				res.data[i] = H.data[i];res.data[i+1] = H.data[i+1];res.data[i+2] = H.data[i+2];
+				res.data[i+3] = 255;
+
+				var rL = 4*(-(inL*inL)/255 + inL)
+				var rM = 4*(-(inM*inM)/255 + inM)
+				var rH = 4*(-(inH*inH)/255 + inH)
+				rL = rL / (4*(rL+rM+rH));
+				rM = rM / (4*(rL+rM+rH));
+				rH = rH / (4*(rL+rM+rH));
+
+				res.data[i] = max(0,rL * L.data[i]) + max(rM * M.data[i]) + max(rH * H.data[i]);
+				res.data[i+1] = max(0,rL * L.data[i+1]) + max(rM * M.data[i+1]) + max(rH * H.data[i+1]);
+				res.data[i+2] = max(0,rL * L.data[i+2]) + max(rM * M.data[i+2]) + max(rH * H.data[i+2]);
+
+				/*if( inH > 180){
+					res.data[i] = M.data[i];res.data[i+1] = M.data[i+1];res.data[i+2] = M.data[i+2];
+				}
+				if( inM > 150 && imL > 30){
+					res.data[i] = L.data[i];res.data[i+1] = L.data[i+1];res.data[i+2] = L.data[i+2];
+				}
+				*/
+			}
+			var can2 = document.createElement('canvas')
+			can2.width = imL.width
+			can2.height= imL.height
+			var ctx2 = can2.getContext('2d')
+			ctx2.putImageData(res,0,0)
+			dv2.appendChild(can2)
+		},4000)
+	}
+
+	function intensity( data, i){
+				var r = data[i]
+				var g = data[i+1]
+				var b = data[i+2]
+				var intens = Math.sqrt( r*r+g*g+b*b)	
+				return intens
+	}
+
+	function getimgdata(img){
+		var can = document.createElement('canvas')
+		can.width = img.width
+		can.height = img.height
+		var ctx = can.getContext('2d');
+		ctx.drawImage( img,0,0);
+		var imgd = ctx.getImageData(0,0, img.width, img.height)
+		return imgd
+	}
+
+
+	function testTriggers(){
+			var dv = document.getElementById('imgs')
+			
+		for(var i=0.000; i < 0.0090; i+= 0.0002){
+			var dv2 = document.createElement('div')
+			var img = new Image()
+			img.style.height = img.style.width = "200px"
+			var sh = i.toPrecision(6)
+			dv2.innerHTML = " <br>trigger: " + sh + "<br>"
+			dv2.appendChild( img)
+			dv.appendChild(dv2)
+			img.src = "http://127.0.0.1:8080/shot.jpg?shutter=4&gain=50&delay="+sh
+		}
+	}
+		function testshutter(shutter){
+			
+			var dv = document.getElementById('imgs')
+			var dv2 = document.createElement('div')
+			var img = new Image()
+			img.style.height = img.style.width = "200px"
+			var sh = shutter
+			dv2.innerHTML = " <br>shutter: " + sh + "<br>"
+			dv2.appendChild( img)
+			dv.appendChild(dv2)
+			img.onload = function(){
+				if( shutter > 0 ){
+								testshutter( shutter - 1)
+				}
+			}
+			img.src = "http://127.0.0.1:8080/shot.jpg?gain=0&shutter=" + shutter
+	}
+
 </script>
 <style>
 #imgs {
@@ -175,6 +291,12 @@ Testing camera at 127.0.0.1:3000. warning no attempts to limit memory consumptio
 <button onclick="rapidFireImages(90)">take 60 pictures medium</button>
 <button onclick="rapidFireImages(180)">take 60 pictures slow</button>
 <button onclick="getLasers(100)">get 100 lasers</button>
+<br>
+<button onclick="testTriggers()">test triggers</button>make sure projector is connected
+<br>
+<button onclick="testshutter(100)">test shutter</button> note this is failing tooo much
+<br>
+<button onclick="HDR()">HDR</button>
 
 <br>
 <button onclick="findMinMax()">findMinMax</button>
