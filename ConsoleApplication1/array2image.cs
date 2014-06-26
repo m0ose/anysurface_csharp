@@ -33,6 +33,12 @@ namespace AnySurfaceWebServer
         {
 
         }
+        unsafe public byte[] copyArray(byte* ptr, int width, int height, int len)
+        {
+            byte[] arr = new byte[len];
+            Marshal.Copy((IntPtr)ptr, arr, 0, len);
+            return arr;
+        }
         unsafe public Bitmap ArrayToBitmap( byte* ptr, int width, int height, int len){
             //maybe copying this image twice is not the most efficiant thing in the world
             //  It says this function only takes 1ms to complete. Plenty fast.

@@ -27,6 +27,7 @@ using System.Drawing;
 using AnySurfaceWebServer;
 using System.Drawing.Imaging;
 
+
 namespace serverAgent
 {
     public class Server
@@ -36,6 +37,7 @@ namespace serverAgent
         private HttpListener listener;
         private HttpListenerContext context;
         private PGCamWrapper camw;
+        private bool EXIT_ON_ERROR = true;
 
         public Server(int _port, string _name)
         {
@@ -133,6 +135,11 @@ namespace serverAgent
                     Console.WriteLine("picture taking took" +stopwatch.ElapsedMilliseconds + "ms" );
                     img.Dispose();
                 }
+                else if (stlow.IndexOf("brightestpoint.json") > 0)
+                {
+                    string bp = camw.brightestPoint();
+                    writeTextResponse(response, bp);
+                }
                 else { 
                 //send response 
                     string responseString = "<HTML><BODY><h3> Your connected to<h1> " + name + "</h1></h3>" + request.RawUrl
@@ -150,6 +157,10 @@ namespace serverAgent
             {
                 var es = "<h3>!!!</h3>  " + e;
                 errorResponse(response, es);
+                if (EXIT_ON_ERROR == true)
+                {
+                    throw e;
+                }
             }
             Console.WriteLine("total response time " + stopwatch.ElapsedMilliseconds + "ms");
             stopwatch.Stop();

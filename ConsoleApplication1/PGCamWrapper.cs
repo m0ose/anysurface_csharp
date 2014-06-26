@@ -31,12 +31,12 @@ namespace AnySurfaceWebServer
     class PGCamWrapper
     {
         public ManagedCamera cam;
-        private int shutter=-990;
+        private int shutter = -990;
         private int gain = -990;
-        private double delay= -990;
+        private double delay = -990;
         private int triggerFails = 0;
         private int MAX_TRIGGER_FAILS = 1;
-        private int PHOTO_TIMEOUT = 1000;
+        private int PHOTO_TIMEOUT = 2000;
         private bool paramChanged = false;
         private ManagedPGRGuid guid;
 
@@ -73,6 +73,21 @@ namespace AnySurfaceWebServer
 
         public ManagedImage getPicture()
         {
+            if (paramChanged == true)
+            {
+                Console.WriteLine("parameter changed, pause for a few pictures");
+                _getPicture();
+                Thread.Sleep(70);
+                _getPicture();
+                Thread.Sleep(70);
+                paramChanged = false;
+            }
+            ManagedImage res = _getPicture();
+            return res;
+        }
+
+        private ManagedImage _getPicture()
+        {
 
             ManagedImage rawImage = new ManagedImage();
             ManagedImage convertedImage = new ManagedImage();
@@ -84,10 +99,15 @@ namespace AnySurfaceWebServer
             catch (FC2Exception e)
             {
                 String et = e.Type.ToString();
+                Debug.WriteLine(cam);
                 if (et == "Timeout" || et == "TriggerFailed")
                 {
                     Console.WriteLine("Turning off trigger beacuse of error {0}", e.ToString());
                     triggerFails++;
+
+                    restartCamera();
+                    triggerFails = 0;
+
                     //throw new Exception("Trigger failed. Make sure GPOI pin is connected and working. Then restart server. Until then No trigger will be used");
                 }
                 else
@@ -99,8 +119,10 @@ namespace AnySurfaceWebServer
             return convertedImage;
         }
 
-        public void restartCamera(){
+        public void restartCamera()
+        {
             Console.WriteLine("Restarting camera");
+            cam.StopCapture();
             cam.Disconnect();
             cam.Connect(guid);
             //cam.StopCapture();
@@ -110,15 +132,7 @@ namespace AnySurfaceWebServer
 
         public Image getPictureBMP()
         {
-            if (paramChanged == true)
-            {
-                Console.WriteLine("parameter changed, pause for a few pictures");
-                getPicture();
-                Thread.Sleep(70);
-                getPicture();
-                Thread.Sleep(70);
-                paramChanged = false;
-            }
+
             ManagedImage convertedImage = getPicture();
             uint datalength = convertedImage.cols * convertedImage.rows;
             int cols = (int)convertedImage.cols;
@@ -170,6 +184,47 @@ namespace AnySurfaceWebServer
             } while ((regVal & k_powerVal) == 0 && count < 100);
             return true;
         }
+
+        public String brightestPoint()
+        {
+            Double maxIntens = 0;
+            uint maxIndex = 0;
+
+             ManagedImage img = getPicture();
+             int w = (int)img.cols;
+             int h = (int)img.rows;
+             int len = w * h;
+
+
+             if (w <= 0 || h <= 0 )
+             {
+                 return "{x:0,y:0,i:0}";
+             }
+
+             unsafe
+             {
+
+                 array2image pu = new array2image();
+                 byte[] fu = pu.copyArray(img.data, w, h, 3 * (int)len);
+                 for (uint i = 0; i < len; i += 3)
+                 {
+                     byte r = fu[i];
+                     byte g = fu[i + 1];
+                     byte b = fu[i + 2];
+                     Double intens = Math.Sqrt(r * r + g * g + b * b);
+                     if (intens > maxIntens)
+                     {
+                         maxIntens = intens;
+                         maxIndex = i;
+                     }
+                 }
+             }
+             int x = (int)(maxIndex % w);
+             int y = (int)(maxIndex / h);//would prefer a floor call here but the language wont allow it. Says it's ambiguous
+             String json2 = "{ x:" + x + " , y:" + y + ", i:" + maxIntens + " }";
+             return json2;
+        }
+
         // These setters/gettters seem a little like repeated code. 
         //
         public int Shutter
@@ -233,23 +288,23 @@ namespace AnySurfaceWebServer
         {
             set
             {
-                if ((value < 0  && delay != -1.0 )|| triggerFails >= MAX_TRIGGER_FAILS)
+                if ((value < 0 && delay != -1.0) || triggerFails >= MAX_TRIGGER_FAILS)
                 {
-                    if( delay != -1.0)
+                    if (delay != -1.0)
                     {
-   CameraProperty gn1 = cam.GetProperty(PropertyType.TriggerMode);
-                    gn1.onOff = false;//I think this is OFF
-                    cam.SetProperty(gn1);
+                        CameraProperty gn1 = cam.GetProperty(PropertyType.TriggerMode);
+                        gn1.onOff = false;//I think this is OFF
+                        cam.SetProperty(gn1);
 
-                    CameraProperty prop = cam.GetProperty(PropertyType.TriggerDelay);
-                    prop.absControl = false;
-                    prop.autoManualMode = true;
-                    prop.onOff = false;
-                    cam.SetProperty(prop);
-                    delay = -1.0;
-                    paramChanged = true;
+                        CameraProperty prop = cam.GetProperty(PropertyType.TriggerDelay);
+                        prop.absControl = false;
+                        prop.autoManualMode = true;
+                        prop.onOff = false;
+                        cam.SetProperty(prop);
+                        delay = -1.0;
+                        paramChanged = true;
                     }
-                 
+
                 }
                 else if (delay != value)
                 {
