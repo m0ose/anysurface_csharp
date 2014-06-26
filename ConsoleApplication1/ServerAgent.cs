@@ -69,7 +69,7 @@ namespace serverAgent
         {
             while (true)
             {
-                Console.WriteLine("listening...");
+                //Console.WriteLine("listening...");
                 context = listener.GetContext();
                 sendResponse();
             }
@@ -80,9 +80,12 @@ namespace serverAgent
             HttpListenerResponse response = context.Response;
             response.Headers["Access-Control-Allow-Origin"] = "*";
             HttpListenerRequest request = context.Request;
+            Console.WriteLine("request for {0} from {1}", request.Url, request.UrlReferrer);
             Debug.WriteLine(request.QueryString.ToString());
             //
             // parse url
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             try
            {
                 for (int i = 0; i < request.QueryString.Count; i++)
@@ -111,15 +114,15 @@ namespace serverAgent
 
                     }
                 }
+                Console.WriteLine("arguments parsed at " + stopwatch.ElapsedMilliseconds + "ms");
 
                 String stlow = request.RawUrl.ToLower();
                 if (stlow.IndexOf("shot.") > 0 || stlow.IndexOf("image.") > 0)
                 {
                     // Image Requested
                     //
-                    Stopwatch stopwatch = new Stopwatch();
-                    stopwatch.Start();
                     ImageFormat firmat = imgformat4url(stlow);
+                    Console.WriteLine("  image format is {0}", firmat.ToString());
                     Debug.WriteLine("shot in da house," + stlow.IndexOf("shot.png"));
                     Image img = camw.getPictureBMP();
                     Console.WriteLine("image gotten at " + stopwatch.ElapsedMilliseconds + "ms");
@@ -127,7 +130,6 @@ namespace serverAgent
                     img.Save(output, firmat);//this is the slowest part by far. jpg encoding is faster than png.
                     Console.WriteLine("image save and stream written at " + stopwatch.ElapsedMilliseconds + "ms");
                     output.Close();
-                    stopwatch.Stop();
                     Console.WriteLine("picture taking took" +stopwatch.ElapsedMilliseconds + "ms" );
                     img.Dispose();
                 }
@@ -149,7 +151,8 @@ namespace serverAgent
                 var es = "<h3>!!!</h3>  " + e;
                 errorResponse(response, es);
             }
-            
+            Console.WriteLine("total response time " + stopwatch.ElapsedMilliseconds + "ms");
+            stopwatch.Stop();
         }
 
         private void writeTextResponse(HttpListenerResponse response, String responseString)
@@ -177,6 +180,7 @@ namespace serverAgent
 
         private ImageFormat imgformat4url(String stlow){
             String extens = stlow.Substring(stlow.LastIndexOf('.'));
+            extens = extens.Split('?')[0];
             if (extens == ".png")
             {
                 return ImageFormat.Png;
