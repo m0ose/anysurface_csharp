@@ -72,6 +72,7 @@ namespace serverAgent
             while (true)
             {
                 //Console.WriteLine("listening...");
+                //Thread.Sleep(40);
                 context = listener.GetContext();
                 sendResponse();
             }

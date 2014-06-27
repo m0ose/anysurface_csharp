@@ -26,6 +26,7 @@ using FlyCapture2Managed;
 using System.Diagnostics;
 using System.Threading;
 
+
 namespace AnySurfaceWebServer
 {
     class PGCamWrapper
@@ -34,12 +35,13 @@ namespace AnySurfaceWebServer
         private int shutter = -990;
         private int gain = -990;
         private double delay = -990;
-        private int triggerFails = 0;
-        private int MAX_TRIGGER_FAILS = 1;
+        private int triggerFails = 2;
+        private int MAX_TRIGGER_FAILS = 5;
         private int PHOTO_TIMEOUT = 2000;
         private bool paramChanged = false;
         private ManagedPGRGuid guid;
         private DateTime lastPic = DateTime.UtcNow;
+        private BrightestPointFinder brightFind = new BrightestPointFinder();
 
         public PGCamWrapper()
         {
@@ -69,7 +71,28 @@ namespace AnySurfaceWebServer
             newStr.AppendFormat("Camera vendor - {0}\n", camInfo.vendorName);
             newStr.AppendFormat("Sensor - {0}\n", camInfo.sensorInfo);
             newStr.AppendFormat("Resolution - {0}\n", camInfo.sensorResolution);
+            newStr.AppendFormat("{0}",getModeInfo());
             return newStr.ToString();
+        }
+
+        public String getModeInfo()
+        {
+            StringBuilder res = new StringBuilder();
+
+            CameraProperty tm = cam.GetProperty(PropertyType.TriggerMode);
+            CameraProperty td = cam.GetProperty(PropertyType.TriggerDelay);
+            CameraProperty tmp = cam.GetProperty(PropertyType.Temperature);
+            CameraProperty fps = cam.GetProperty(PropertyType.FrameRate);
+            CameraProperty sh = cam.GetProperty(PropertyType.Shutter);
+
+            res.AppendFormat("trigger mode:   abs control:{0} auto:{1} on:{2}\n", tm.absControl, tm.autoManualMode, tm.onOff);
+            res.AppendFormat(" trigger delay: {0}, {1}\n", td.absControl, td.absValue);
+            res.AppendFormat(" temperature: {0}, {1}\n", tmp.absValue, tmp.valueA);
+            res.AppendFormat(" framerate:{0}, {1}\n", fps.valueA, fps.absValue);
+            res.AppendFormat(" shutter:{0}, {1}\n", sh.valueA, fps.absValue);
+
+
+            return res.ToString();
         }
 
         public ManagedImage getPicture()
@@ -79,6 +102,7 @@ namespace AnySurfaceWebServer
             {
                 Console.WriteLine("parameter changed, pause for a few pictures");
                 _getPicture();
+                Thread.Sleep(120);
                 paramChanged = false;
             }
             ManagedImage res = _getPicture();
@@ -90,10 +114,11 @@ namespace AnySurfaceWebServer
             TimeSpan diff = now - lastPic;
             double diff2 = diff.TotalMilliseconds;
             Console.WriteLine("milliseconds since last pic {0}", diff.TotalMilliseconds);
-            if (diff2 < Math.Min(30, Shutter+10))
+            var shitter = Math.Max(Shutter, 20);
+            if (diff2 <shitter)
             {
-                Console.WriteLine("sleeping for {0}", 35 - diff2 );
-                Thread.Sleep((int)(35 - diff2));
+                Console.WriteLine("sleeping for {0}", shitter  - diff2);
+                Thread.Sleep((int)(shitter  - diff2));
             }
             lastPic = now;
         }
@@ -107,7 +132,8 @@ namespace AnySurfaceWebServer
 
             try
             {
-                cam.RetrieveBuffer(rawImage);//get the actual image
+                cam.WaitForBufferEvent(rawImage,0);// Oooh, this is a much safer way to get the image
+                //cam.RetrieveBuffer(rawImage);//get the actual image
                 rawImage.Convert(PixelFormat.PixelFormatBgr, convertedImage);
             }
             catch (FC2Exception e)
@@ -117,14 +143,16 @@ namespace AnySurfaceWebServer
                 Debug.WriteLine(cam);
                 if (et == "Timeout" || et == "TriggerFailed")
                 {
-                    Console.WriteLine("Turning off trigger beacuse of error {0}", e.ToString());
-                    triggerFails++;
-                    if (triggerFails >= 1)
+                    Console.WriteLine("\n\nTIMEOUT ERROR {0} \n\n", e.ToString());
+                    //if (Delay > 0)
                     {
-                        restartCamera();
-                    //    triggerFails = 0;
+                        triggerFails++;
+                        if (triggerFails > MAX_TRIGGER_FAILS)
+                        {
+                            Delay = -1;
+                        }
                     }
-                    //throw new Exception("Trigger failed. Make sure GPOI pin is connected and working. Then restart server. Until then No trigger will be used");
+                    restartCamera();
                 }
                 else
                 {
@@ -138,6 +166,7 @@ namespace AnySurfaceWebServer
         public void restartCamera()
         {
             Console.WriteLine("Restarting camera");
+            Console.WriteLine(getModeInfo());
             try
             {
                 cam.StopCapture();
@@ -163,8 +192,6 @@ namespace AnySurfaceWebServer
             uint datalength = convertedImage.cols * convertedImage.rows;
             int cols = (int)convertedImage.cols;
             int rows = (int)convertedImage.rows;
-            //Bitmap fart = new Bitmap(cols, rows);
-            //byte[] wart = new byte[datalength];
             if (cols <= 0 || rows <= 0)
             {
                 return new Bitmap(1, 1);
@@ -192,6 +219,7 @@ namespace AnySurfaceWebServer
             cam.SetProperty(fps);
             Shutter = -1;
             Gain = -1;
+            Delay = -1;
             FC2Config config = cam.GetConfiguration();
             config.grabTimeout = PHOTO_TIMEOUT;// seconds before image reception fails
             cam.SetConfiguration(config);
@@ -217,42 +245,8 @@ namespace AnySurfaceWebServer
 
         public String brightestPoint()
         {
-            Double maxIntens = 0;
-            uint maxIndex = 0;
-
              ManagedImage img = getPicture();
-             int w = (int)img.cols;
-             int h = (int)img.rows;
-             int len = w * h;
-
-
-             if (w <= 0 || h <= 0 )
-             {
-                 return "{x:0,y:0,i:0}";
-             }
-
-             unsafe
-             {
-
-                 array2image pu = new array2image();
-                 byte[] fu = pu.copyArray(img.data, w, h, 3 * (int)len);
-                 for (uint i = 0; i < len; i += 3)
-                 {
-                     byte r = fu[i];
-                     byte g = fu[i + 1];
-                     byte b = fu[i + 2];
-                     Double intens = Math.Sqrt(r * r + g * g + b * b);
-                     if (intens > maxIntens)
-                     {
-                         maxIntens = intens;
-                         maxIndex = i;
-                     }
-                 }
-             }
-             int x = (int)(maxIndex % w);
-             int y = (int)(maxIndex / h);//would prefer a floor call here but the language wont allow it. Says it's ambiguous
-             String json2 = "{ x:" + x + " , y:" + y + ", i:" + maxIntens + " }";
-             return json2;
+             return brightFind.brightestPoint( img);
         }
 
         // These setters/gettters seem a little like repeated code. 
@@ -305,6 +299,7 @@ namespace AnySurfaceWebServer
                     cam.SetProperty(gn);
                     gain = value;
                     Console.WriteLine("gain set to {0}", gain);
+                    Thread.Sleep(90);//takes a little while
                     paramChanged = true;
                 }
             }
@@ -320,7 +315,7 @@ namespace AnySurfaceWebServer
             {
                 if ((value < 0 && delay != -1.0) || triggerFails >= MAX_TRIGGER_FAILS)
                 {
-                    if (delay != -1.0)
+                    //if (delay != -1.0)
                     {
                         CameraProperty gn1 = cam.GetProperty(PropertyType.TriggerMode);
                         gn1.onOff = false;//I think this is OFF

@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="array2image.cs" />
+    <Compile Include="BrightestPointFinder.cs" />
     <Compile Include="PGCamWrapper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
