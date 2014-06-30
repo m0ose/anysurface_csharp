@@ -34,7 +34,7 @@ namespace AnySurfaceWebServer
 
             if (w <= 0 || h <= 0)
             {
-                return "{x:0,y:0,i:0}";
+                return "{\"x\":0,\"y\":0,\"i\":0,\"x2\":0,\"y2\":0}";
             }
 
             unsafe
@@ -67,7 +67,12 @@ namespace AnySurfaceWebServer
             }
             int x = (int)(maxIndex % w);
             int y = (int)(maxIndex / h);//would prefer a floor call here but the language wont allow it. Says it's ambiguous
-            String json2 = "{ x:" + x + " , y:" + y + ", i:" + maxIntens + " }";
+            float x2 = x / w;
+            float y2 = y / h;
+            //String json2 = "{\"x\":" + x + ",\"y\":" + y + ",\"i\":" + maxIntens + " }";
+            StringBuilder jstr = new StringBuilder();
+            jstr.AppendFormat("\"x\":{0},\"y\":{1},\"x2\":{2},\"y2\":{3},\"i\":{4}", x,y,x2,y2,maxIntens);
+            String json2 = "{"+jstr.ToString()+"}";
             lastTime = now;
             return json2;
         }

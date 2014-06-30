@@ -238,6 +238,53 @@
 			img.src = "http://127.0.0.1:8080/shot.jpg?gain=0&shutter=" + shutter
 	}
 
+
+	function getLasers2( n ){
+		var cn = document.getElementById('floop') 
+		if( cn ==null){
+			var dv = document.getElementById('imgs')
+			cn = document.createElement('canvas')
+			cn.id="floop"
+			cn.width = 640
+			cn.height = 480
+			dv.appendChild(cn)
+		}
+		
+		var ctx = cn.getContext('2d')
+		
+		var start = new Date().getTime()
+		function reqListener2 () {
+			var end = new Date().getTime()
+			var obj = JSON.parse( this.responseText)
+  			//console.log(this.responseText);
+  			ctx.fillStyle = "rgba(0,0,0,0.2)"
+			ctx.fillRect( 0, 0, cn.width, cn.height)
+			var r = Math.sqrt(obj.i);
+			if( obj.i > 100){
+				ctx.fillStyle = "rgba(255,0,10,255)"
+			}
+			else{
+				ctx.fillStyle = "rgba(255,255,10,0.9)"
+			}
+				ctx.fillRect( obj.x-r/2, obj.y-r/2,r,r)
+		
+			//dv.innerHTML = String(end - start) + " ms . Response :" + this.responseText + "<hr>" + dv.innerHTML
+			if( n>0){
+						getLasers2( n-1)
+			}
+		}
+
+		var oReq = new XMLHttpRequest();
+		oReq.addEventListener("error", function(){ 
+			console.warn('error loading shutter')
+			var dve = document.getElementById('errors')
+  			dve.innerHTML = (new Date())+" find min max shutter error<hr>" + dve.innerHTML
+		}, false);
+		oReq.onload = reqListener2;
+		oReq.open("get", url + 'brightestPoint.json?shutter=10&gain=0', true);
+		oReq.send();
+	}
+
 </script>
 <style>
 #imgs {
@@ -290,7 +337,7 @@ Testing camera at 127.0.0.1:8080. warning no attempts to limit memory consumptio
 <button onclick="rapidFireImages(20)">take 60 pictures fast</button>
 <button onclick="rapidFireImages(90)">take 60 pictures medium</button>
 <button onclick="rapidFireImages(180)">take 60 pictures slow</button>
-<button onclick="getLasers(100)">get 100 lasers</button>
+<button onclick="getLasers2(20000)">get many lasers</button>
 <br>
 <button onclick="testTriggers()">test triggers</button>make sure projector is connected
 <br>
