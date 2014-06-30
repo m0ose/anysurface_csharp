@@ -26,6 +26,8 @@ using System.Diagnostics;
 using System.Drawing;
 using AnySurfaceWebServer;
 using System.Drawing.Imaging;
+using System.IO;
+using System.Reflection;
 
 
 namespace serverAgent
@@ -141,6 +143,10 @@ namespace serverAgent
                     string bp = camw.brightestPoint();
                     writeTextResponse(response, bp);
                 }
+                else if( stlow.IndexOf("stresstest") > 0){
+                    String q = AnySurfaceWebServer.Properties.Resources.stressTest;
+                    writeTextResponse(response, q);
+                }
                 else { 
                 //send response 
                     string responseString = "<HTML><BODY><h3> Your connected to<h1> " + name + "</h1></h3>" + request.RawUrl
@@ -152,6 +158,7 @@ namespace serverAgent
                         + " <li><b><a href='http://127.0.0.1:" + port + "/shot.png'>http://127.0.0.1:" + port + "/shot.png</a></b>. Different formats based on extension. Supported extensions are jpg, png, and bmp."
                         + " <li><b><a href='http://127.0.0.1:" + port + "/brightestpoint.json'>http://127.0.0.1:" + port + "/brightestpoint.json</a></b>. Find the brightest Point"
                         + " <li><b><a href='http://127.0.0.1:" + port + "/brightestpoint.json?shutter=40&gain=0'>http://127.0.0.1:" + port + "/brightestpoint.json?shutter=40&gain=0</a></b>. Find the brightest Point"
+                        + " <li><b><a href='http://127.0.0.1:" + port + "/stressTest.html'>http://127.0.0.1:" + port + "/stressTest.html</a></b>... more tests ..."
 
 
                         + "</BODY></HTML>";
@@ -194,6 +201,7 @@ namespace serverAgent
             return;
         }
 
+      
         private ImageFormat imgformat4url(String stlow){
             String extens = stlow.Substring(stlow.LastIndexOf('.'));
             extens = extens.Split('?')[0];

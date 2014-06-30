@@ -22,7 +22,7 @@ namespace AnySurfaceWebServer.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace AnySurfaceWebServer.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AnySurfaceWebServer.Properties.Resources", typeof(Resources).Assembly);
@@ -51,12 +51,51 @@ namespace AnySurfaceWebServer.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;html&gt;
+        ///&lt;head&gt;
+        ///&lt;script type=&quot;text/javascript&quot;&gt;
+        ///	url = &apos;http://127.0.0.1:8080/&apos;
+        ///	var rapidCount = 0
+        ///	var rapidId
+        ///
+        ///	function rapidFireImages( interval ){
+        ///		rapidCount = 0
+        ///		if( ! interval ){
+        ///			interval = 80
+        ///		}
+        ///		rapidId = setInterval(function(){
+        ///			if( rapidCount &lt; 60){
+        ///				takePicture()
+        ///			}
+        ///			else{
+        ///				clearInterval(rapidId)
+        ///			}
+        ///			rapidCount ++ 
+        ///		}, interval)	
+        ///	}
+        ///
+        ///	var pauseTime = 0
+        ///
+        ///	function gonuts(){
+        ///		setInterval(function(){
+        ///			var now = new Date().getTime()
+        ///			if( now &lt; pauseTime){
+        ///				return
+        ///			} [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string stressTest {
+            get {
+                return ResourceManager.GetString("stressTest", resourceCulture);
             }
         }
     }

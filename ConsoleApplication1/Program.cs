@@ -36,14 +36,19 @@ namespace AnySurfaceWebServer
             var ck = new ConsoleKeyInfo();
             try
             {
+
                 serv = new Server(8080, "Camera Server");
                 serv.startServer();
             }
             catch (Exception e)
             {
+                Console.WriteLine(e.ToString().ToLower());
+                if (e.Message.ToLower() == "access is denied")
+                {
+                Console.WriteLine("\n\nSECURITY IN WINDOWS NOTE:   From administrator shell run: netsh http add urlacl url=http://*:8080/ user=dood listen=yes \n\n");
+                }
                 Console.WriteLine(e.ToString());
                 Console.WriteLine(" Press any key to exit");
-
                 ck = Console.ReadKey();
                 return;
             }
