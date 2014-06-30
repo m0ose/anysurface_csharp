@@ -47,7 +47,7 @@ namespace AnySurfaceWebServer
                     avgimg = fu;
                 }
                 
-                for (uint i = 0; i < len; i += 3)
+                for (uint i = 0; i < fu.Length; i += 3)
                 {
                     byte r = subtr(fu[i], avgimg[i]);//fu[i] ;
                     byte g = subtr(fu[i+1], avgimg[i+1]);//fu[i + 1] - avgimg[i] ;
@@ -56,7 +56,7 @@ namespace AnySurfaceWebServer
                     if (intens > maxIntens)
                     {
                         maxIntens = intens;
-                        maxIndex = i;
+                        maxIndex = i/3;
                     }
                 }
                 //average the image in with the last ones
@@ -66,9 +66,9 @@ namespace AnySurfaceWebServer
                 }
             }
             int x = (int)(maxIndex % w);
-            int y = (int)(maxIndex / h);//would prefer a floor call here but the language wont allow it. Says it's ambiguous
-            float x2 = x / w;
-            float y2 = y / h;
+            int y = (int)(maxIndex / w);//would prefer a floor call here but the language wont allow it. Says it's ambiguous
+            float x2 = (float)x / (float)w;
+            float y2 = (float)y / (float)h;
             //String json2 = "{\"x\":" + x + ",\"y\":" + y + ",\"i\":" + maxIntens + " }";
             StringBuilder jstr = new StringBuilder();
             jstr.AppendFormat("\"x\":{0},\"y\":{1},\"x2\":{2},\"y2\":{3},\"i\":{4}", x,y,x2,y2,maxIntens);
