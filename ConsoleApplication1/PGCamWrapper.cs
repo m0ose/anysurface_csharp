@@ -35,9 +35,9 @@ namespace AnySurfaceWebServer
         private int shutter = -990;
         private int gain = -990;
         private double delay = -990;
-        private int triggerFails = 2;
-        private int MAX_TRIGGER_FAILS = 5;
-        private int PHOTO_TIMEOUT = 2000;
+        private int triggerFails = 0;
+        private int MAX_TRIGGER_FAILS = 5;//after five abondone using triggers
+        private int PHOTO_TIMEOUT = 2000;//ms. how long to wait before picture has failed
         private bool paramChanged = false;
         private ManagedPGRGuid guid;
         private DateTime lastPic = DateTime.UtcNow;
@@ -71,7 +71,7 @@ namespace AnySurfaceWebServer
             newStr.AppendFormat("Camera vendor - {0}\n", camInfo.vendorName);
             newStr.AppendFormat("Sensor - {0}\n", camInfo.sensorInfo);
             newStr.AppendFormat("Resolution - {0}\n", camInfo.sensorResolution);
-            newStr.AppendFormat("{0}",getModeInfo());
+            newStr.AppendFormat("{0}", getModeInfo());
             return newStr.ToString();
         }
 
@@ -91,7 +91,6 @@ namespace AnySurfaceWebServer
             res.AppendFormat(" framerate:{0}, {1}\n", fps.valueA, fps.absValue);
             res.AppendFormat(" shutter:{0}, {1}\n", sh.valueA, fps.absValue);
 
-
             return res.ToString();
         }
 
@@ -109,16 +108,17 @@ namespace AnySurfaceWebServer
             return res;
         }
 
-        private void pauseForShutter(){
+        private void pauseForShutter()
+        {
             DateTime now = DateTime.UtcNow;
             TimeSpan diff = now - lastPic;
             double diff2 = diff.TotalMilliseconds;
             Console.WriteLine("milliseconds since last pic {0}", diff.TotalMilliseconds);
             var shitter = Math.Max(Shutter, 20);
-            if (diff2 <shitter)
+            if (diff2 < shitter)
             {
-                Console.WriteLine("sleeping for {0}", shitter  - diff2);
-                Thread.Sleep((int)(shitter  - diff2));
+                Console.WriteLine("sleeping for {0}", shitter - diff2);
+                Thread.Sleep((int)(shitter - diff2));
             }
             lastPic = now;
         }
@@ -132,7 +132,7 @@ namespace AnySurfaceWebServer
 
             try
             {
-                cam.WaitForBufferEvent(rawImage,0);// Oooh, this is a much safer way to get the image
+                cam.WaitForBufferEvent(rawImage, 0);// Oooh, this is a much safer way to get the image
                 //cam.RetrieveBuffer(rawImage);//get the actual image
                 rawImage.Convert(PixelFormat.PixelFormatBgr, convertedImage);
             }
@@ -172,7 +172,7 @@ namespace AnySurfaceWebServer
                 cam.StopCapture();
             }
             catch (Exception e)
-            {}
+            { }
             cam.Disconnect();
             Thread.Sleep(200);
             cam = new ManagedCamera();
@@ -245,8 +245,8 @@ namespace AnySurfaceWebServer
 
         public String brightestPoint()
         {
-             ManagedImage img = getPicture();
-             return brightFind.brightestPoint( img);
+            ManagedImage img = getPicture();
+            return brightFind.brightestPoint(img);
         }
 
         // These setters/gettters seem a little like repeated code. 
@@ -315,20 +315,18 @@ namespace AnySurfaceWebServer
             {
                 if ((value < 0 && delay != -1.0) || triggerFails >= MAX_TRIGGER_FAILS)
                 {
-                    //if (delay != -1.0)
-                    {
-                        CameraProperty gn1 = cam.GetProperty(PropertyType.TriggerMode);
-                        gn1.onOff = false;//I think this is OFF
-                        cam.SetProperty(gn1);
 
-                        CameraProperty prop = cam.GetProperty(PropertyType.TriggerDelay);
-                        prop.absControl = false;
-                        prop.autoManualMode = true;
-                        prop.onOff = false;
-                        cam.SetProperty(prop);
-                        delay = -1.0;
-                        paramChanged = true;
-                    }
+                    CameraProperty gn1 = cam.GetProperty(PropertyType.TriggerMode);
+                    gn1.onOff = false;//I think this is OFF
+                    cam.SetProperty(gn1);
+
+                    CameraProperty prop = cam.GetProperty(PropertyType.TriggerDelay);
+                    prop.absControl = false;
+                    prop.autoManualMode = true;
+                    prop.onOff = false;
+                    cam.SetProperty(prop);
+                    delay = -1.0;
+                    paramChanged = true;
 
                 }
                 else if (delay != value)

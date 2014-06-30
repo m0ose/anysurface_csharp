@@ -49,9 +49,9 @@ namespace AnySurfaceWebServer
                 
                 for (uint i = 0; i < fu.Length; i += 3)
                 {
-                    byte r = subtr(fu[i], avgimg[i]);//fu[i] ;
-                    byte g = subtr(fu[i+1], avgimg[i+1]);//fu[i + 1] - avgimg[i] ;
-                    byte b = subtr(fu[i + 2], avgimg[i + 2]);//fu[i + 2];
+                    byte r = subtr(fu[i], avgimg[i]);
+                    byte g = subtr(fu[i+1], avgimg[i+1]);
+                    byte b = subtr(fu[i + 2], avgimg[i + 2]);
                     Double intens = Math.Sqrt(r * r + g * g + b * b);
                     if (intens > maxIntens)
                     {
@@ -66,10 +66,9 @@ namespace AnySurfaceWebServer
                 }
             }
             int x = (int)(maxIndex % w);
-            int y = (int)(maxIndex / w);//would prefer a floor call here but the language wont allow it. Says it's ambiguous
+            int y = (int)(maxIndex / w);
             float x2 = (float)x / (float)w;
             float y2 = (float)y / (float)h;
-            //String json2 = "{\"x\":" + x + ",\"y\":" + y + ",\"i\":" + maxIntens + " }";
             StringBuilder jstr = new StringBuilder();
             jstr.AppendFormat("\"x\":{0},\"y\":{1},\"x2\":{2},\"y2\":{3},\"i\":{4}", x,y,x2,y2,maxIntens);
             String json2 = "{"+jstr.ToString()+"}";
